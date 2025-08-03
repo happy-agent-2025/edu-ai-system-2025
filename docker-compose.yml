@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # 后端服务
+  backend:
+    build: .
+    container_name: edu-ai-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:///data/edu_ai.db
+      - JWT_SECRET_KEY=edu-ai-jwt-secret-key-change-in-production
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./models:/app/models
+    depends_on:
+      - redis
+    networks:
+      - edu-ai-network
+    restart: unless-stopped
+
+  # 前端服务
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: edu-ai-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:5000
+    depends_on:
+      - backend
+    networks:
+      - edu-ai-network
+    restart: unless-stopped
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: edu-ai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - edu-ai-network
+    restart: unless-stopped
+
+  # 数据库服务 (可选，可以使用PostgreSQL替代SQLite)
+  # postgres:
+  #   image: postgres:13
+  #   container_name: edu-ai-postgres
+  #   environment:
+  #     - POSTGRES_DB=edu_ai
+  #     - POSTGRES_USER=edu_user
+  #     - POSTGRES_PASSWORD=edu_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - edu-ai-network
+  #   restart: unless-stopped
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: edu-ai-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - edu-ai-network
+    restart: unless-stopped
+
+# 数据卷定义
+volumes:
+  redis_data:
+  postgres_data:
+
+# 网络定义
+networks:
+  edu-ai-network:
+    driver: bridge

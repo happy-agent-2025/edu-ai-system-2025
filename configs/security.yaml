@@ -1,0 +1,111 @@
+# 安全配置文件
+
+# JWT配置
+jwt:
+  secret_key: "edu-ai-jwt-secret-key"
+  algorithm: "HS256"
+  expiration_delta: 3600  # 秒
+  refresh_delta: 86400    # 秒
+
+# 密码安全配置
+password:
+  min_length: 8
+  require_uppercase: true
+  require_lowercase: true
+  require_digits: true
+  require_special_chars: true
+  hash_method: "bcrypt"
+  bcrypt_rounds: 12
+
+# 内容安全配置
+content_safety:
+  enabled: true
+  max_content_length: 1000
+  restricted_keywords:
+    - "violence"
+    - "adult_content"
+    - "personal_information"
+    - "dangerous_activities"
+  scanning_enabled: true
+  scanning_model: "content-filter-model"
+
+# API安全配置
+api_security:
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    requests_per_hour: 1000
+  ip_blacklist: []
+  ip_whitelist: []
+  user_agent_filtering: true
+
+# 数据库安全配置
+database_security:
+  encryption_enabled: true
+  encryption_key_rotation_days: 30
+  backup_encryption: true
+  access_logging: true
+
+# 网络安全配置
+network_security:
+  ssl_enabled: false
+  ssl_certificate_file: ""
+  ssl_private_key_file: ""
+  allowed_origins:
+    - "http://localhost:8501"
+    - "http://127.0.0.1:8501"
+  cors_enabled: true
+
+# 认证配置
+authentication:
+  enabled: true
+  session_timeout: 3600  # 秒
+  max_login_attempts: 5
+  lockout_duration: 900  # 秒
+  two_factor_auth: false
+
+# 权限配置
+authorization:
+  default_role: "user"
+  roles:
+    - "user"
+    - "parent"
+    - "admin"
+  permissions:
+    user:
+      - "chat"
+      - "view_history"
+    parent:
+      - "chat"
+      - "view_history"
+      - "view_dashboard"
+    admin:
+      - "all"
+
+# 审计日志配置
+audit_logging:
+  enabled: true
+  log_level: "INFO"
+  retention_days: 90
+  sensitive_operations:
+    - "login"
+    - "logout"
+    - "content_blocked"
+    - "admin_access"
+
+# 隐私配置
+privacy:
+  data_retention_days: 365
+  anonymization_enabled: true
+  pii_detection: true
+  consent_required: true
+
+# 儿童保护配置
+child_protection:
+  age_limit: 12
+  content_filtering_level: "strict"
+  time_limiting:
+    enabled: true
+    daily_limit_minutes: 60
+    session_limit_minutes: 20
+  parental_control_required: true

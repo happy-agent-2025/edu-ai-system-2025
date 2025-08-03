@@ -1,0 +1,76 @@
+# Agent配置文件
+
+# 元Agent配置
+meta_agent:
+  name: "MetaAgent"
+  description: "负责意图识别和路由的元Agent"
+  enabled: true
+  routing_timeout: 30
+
+# 教育Agent配置
+edu_agent:
+  name: "EduAgent"
+  description: "负责处理教育相关问题的Agent"
+  enabled: true
+  max_response_length: 1000
+  knowledge_base:
+    - "math"
+    - "language"
+    - "science"
+    - "history"
+    - "geography"
+
+# 情感Agent配置
+emotion_agent:
+  name: "EmotionAgent"
+  description: "负责处理情感相关问题的Agent"
+  enabled: true
+  max_empathy_responses: 5
+  emotion_detection: true
+
+# 安全Agent配置
+safety_agent:
+  name: "SafetyAgent"
+  description: "负责内容安全审查的Agent"
+  enabled: true
+  max_retry_attempts: 3
+  rejection_categories:
+    - "violence"
+    - "inappropriate_content"
+    - "privacy"
+    - "dangerous_behavior"
+    - "negative_emotions"
+
+# 记忆Agent配置
+memory_agent:
+  name: "MemoryAgent"
+  description: "负责存储和检索对话历史的Agent"
+  enabled: true
+  max_history_length: 100
+  persistence_enabled: true
+  persistence_interval: 300  # 秒
+
+# Agent间通信配置
+agent_communication:
+  timeout: 60
+  retry_attempts: 3
+  message_format: "json"
+
+# Agent模型配置
+agent_models:
+  edu_agent:
+    model_name: "gpt-3.5-turbo"
+    temperature: 0.7
+    max_tokens: 500
+  emotion_agent:
+    model_name: "gpt-3.5-turbo"
+    temperature: 0.8
+    max_tokens: 300
+  safety_agent:
+    model_name: "content-filter"
+    threshold: 0.8
+
+# Agent负载均衡配置
+load_balancing:
+  strategy: "round_robin"
+  health_check_interval: 30
