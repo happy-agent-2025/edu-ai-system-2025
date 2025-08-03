@@ -42,6 +42,8 @@ def chat():
         data = request.get_json()
         user_text = data.get('text', '')
         user_id = data.get('user_id', 'default_user')
+        user_grade = data.get('grade', '小学')
+        user_emotion = data.get('emotion', 'neutral')
         
         if not user_text:
             return jsonify({
@@ -55,7 +57,9 @@ def chat():
         # 使用元Agent处理用户输入
         input_data = {
             'text': user_text,
-            'user_id': user_id
+            'user_id': user_id,
+            'grade': user_grade,
+            'emotion': user_emotion
         }
         
         # 获取Agent响应
@@ -102,6 +106,15 @@ def chat():
         }
         db_manager.insert_conversation(conversation_data)
         
+        # 添加到记忆Agent
+        memory_data = {
+            'action': 'add_to_memory',
+            'user_id': user_id,
+            'human_message': user_text,
+            'ai_message': final_response
+        }
+        memory_agent.process(memory_data)
+        
         # 记录交互日志
         logger.log_interaction(
             user_id=user_id,
@@ -110,14 +123,6 @@ def chat():
             agent_name=agent_response.get('agent', 'Unknown'),
             safety_check=safety_result['status']
         )
-        
-        # 更新记忆
-        memory_data = {
-            'action': 'store',
-            'user_id': user_id,
-            'conversation': conversation_data
-        }
-        memory_agent.process(memory_data)
         
         return jsonify({
             'status': 'success',

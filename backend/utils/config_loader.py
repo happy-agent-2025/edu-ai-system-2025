@@ -8,7 +8,8 @@
 import yaml
 import json
 import os
-from typing import Dict, Any, Optional
+import dotenv
+from typing import Dict, Any, Optional, Union
 
 
 class ConfigLoader:
@@ -85,6 +86,8 @@ class ConfigLoader:
             return ConfigLoader.load_yaml_config(file_path)
         elif ext.lower() == '.json':
             return ConfigLoader.load_json_config(file_path)
+        elif ext.lower() == '.env':
+            return ConfigLoader.load_env_config(file_path)
         else:
             print(f"不支持的配置文件格式: {ext}")
             return {}
@@ -113,9 +116,41 @@ class ConfigLoader:
             return default
     
     @staticmethod
+    def load_env_config(file_path: str) -> Dict[str, Any]:
+        """
+        加载.env格式配置文件
+        
+        Args:
+            file_path (str): 配置文件路径
+            
+        Returns:
+            Dict[str, Any]: 配置数据
+        """
+        try:
+            dotenv.load_dotenv(file_path)
+            return dict(os.environ)
+        except Exception as e:
+            print(f"加载.env配置文件时出错: {e}")
+            return {}
+
+    @staticmethod
+    def get_env_value(key: str, default: Any = None) -> Optional[str]:
+        """
+        获取环境变量值
+        
+        Args:
+            key (str): 环境变量键名
+            default (Any): 默认值
+            
+        Returns:
+            Optional[str]: 环境变量值或默认值
+        """
+        return os.getenv(key, default)
+    
+    @staticmethod
     def merge_configs(*configs: Dict[str, Any]) -> Dict[str, Any]:
         """
-        合并多个配置字典
+        合并多个配置字典，后续配置会覆盖前面的同名配置
         
         Args:
             *configs (Dict[str, Any]): 配置字典列表
@@ -125,8 +160,30 @@ class ConfigLoader:
         """
         merged = {}
         for config in configs:
-            merged.update(config)
+            if config:
+                merged.update(config)
         return merged
+    
+    @staticmethod
+    def merge_config_with_env(config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        将配置字典与环境变量合并，环境变量优先级更高
+        
+        Args:
+            config (Dict[str, Any]): 原始配置字典
+            
+        Returns:
+            Dict[str, Any]: 合并后的配置字典
+        """
+        env_config = {}
+        for key, value in os.environ.items():
+            keys = key.lower().split('_')
+            current = env_config
+            for k in keys[:-1]:
+                current = current.setdefault(k, {})
+            current[keys[-1]] = value
+        
+        return ConfigLoader.merge_configs(config, env_config)
 
 
 # 全局配置实例

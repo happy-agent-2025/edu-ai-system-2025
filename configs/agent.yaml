@@ -13,6 +13,8 @@ edu_agent:
   description: "负责处理教育相关问题的Agent"
   enabled: true
   max_response_length: 1000
+  ollama_model: "qwen:0.5b"
+  temperature: 0.7
   knowledge_base:
     - "math"
     - "language"
@@ -27,6 +29,8 @@ emotion_agent:
   enabled: true
   max_empathy_responses: 5
   emotion_detection: true
+  ollama_model: "qwen:0.5b"
+  temperature: 0.8
 
 # 安全Agent配置
 safety_agent:
@@ -34,6 +38,8 @@ safety_agent:
   description: "负责内容安全审查的Agent"
   enabled: true
   max_retry_attempts: 3
+  ollama_model: "qwen:0.5b"
+  temperature: 0.0
   rejection_categories:
     - "violence"
     - "inappropriate_content"
@@ -59,18 +65,38 @@ agent_communication:
 # Agent模型配置
 agent_models:
   edu_agent:
-    model_name: "gpt-3.5-turbo"
+    model_name: "qwen:0.5b"
     temperature: 0.7
     max_tokens: 500
   emotion_agent:
-    model_name: "gpt-3.5-turbo"
+    model_name: "qwen:0.5b"
     temperature: 0.8
     max_tokens: 300
   safety_agent:
-    model_name: "content-filter"
-    threshold: 0.8
+    model_name: "qwen:0.5b"
+    temperature: 0.0
+    max_tokens: 200
 
 # Agent负载均衡配置
 load_balancing:
   strategy: "round_robin"
   health_check_interval: 30
+
+# 模型管理配置
+model_management:
+  mlflow:
+    tracking_uri: "http://localhost:5000"
+    experiment_name: "edu-ai-agents"
+    model_name: "qwen-agents"
+  ab_testing:
+    enabled: true
+    variants:
+      - name: "qwen-0.5b"
+        model: "qwen:0.5b"
+        traffic_percentage: 70
+      - name: "llama2"
+        model: "llama2"
+        traffic_percentage: 30
+  rollback:
+    enabled: true
+    max_versions: 5

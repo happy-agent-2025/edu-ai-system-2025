@@ -10,6 +10,8 @@ from typing import Dict, Any
 from backend.agents.base_agent import BaseAgent
 from backend.agents.edu_agent import EduAgent
 from backend.agents.emotion_agent import EmotionAgent
+from langchain_ollama import OllamaLLM  # 假设LangChain的Ollama模型接口
+from backend.agents.langchain_agent import LangChainAgent  # 假设LangChain代理的封装
 
 
 class MetaAgent(BaseAgent):
@@ -25,6 +27,7 @@ class MetaAgent(BaseAgent):
         # 初始化各个目标Agent
         self.edu_agent = EduAgent()
         self.emotion_agent = EmotionAgent()
+        self.langchain_agent = LangChainAgent(model=OllamaLLM(model="llama2"))  # 初始化LangChain代理
         
         # 定义教育相关关键词
         self.edu_keywords = [
@@ -60,6 +63,8 @@ class MetaAgent(BaseAgent):
             return self.edu_agent.process(input_data)
         elif intent == 'emotion':
             return self.emotion_agent.process(input_data)
+        elif intent == 'langchain':
+            return self.langchain_agent.process(input_data)
         else:
             # 默认路由到教育Agent
             return self.edu_agent.process(input_data)
@@ -88,10 +93,24 @@ class MetaAgent(BaseAgent):
                 emotion_score += 1
         
         # 根据匹配分数判断意图
-        if edu_score > emotion_score and edu_score > 0:
-            return 'edu'
-        elif emotion_score > edu_score and emotion_score > 0:
-            return 'emotion'
+        # 计算LangChain相关关键词匹配数
+        langchain_score = 0
+        for keyword in self.langchain_keywords:
+            if keyword in text:
+                langchain_score += 1
+        
+        # 根据匹配分数判断意图
+        scores = {
+            'edu': edu_score,
+            'emotion': emotion_score,
+            'langchain': langchain_score
+        }
+        
+        # 找出最高分的意图
+        max_intent = max(scores, key=scores.get)
+                
+        # 如果最高分大于0，返回对应的意图，否则返回'unknown'
+        if scores[max_intent] > 0:
+            return max_intent
         else:
-            # 如果无法明确判断，优先教育意图
-            return 'edu' if edu_score > 0 else 'unknown'
+            return 'unknown'

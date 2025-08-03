@@ -7,6 +7,7 @@ Agent基类
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
+from langchain_core.runnables import Runnable
 
 
 class BaseAgent(ABC):
@@ -23,6 +24,7 @@ class BaseAgent(ABC):
         """
         self.name = name
         self.description = ""
+        self.chain: Optional[Runnable] = None
         
     @abstractmethod
     def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -63,3 +65,12 @@ class BaseAgent(ABC):
             description (str): 描述信息
         """
         self.description = description
+    
+    def set_chain(self, chain: Runnable):
+        """
+        设置LangChain链
+        
+        Args:
+            chain (Runnable): LangChain链
+        """
+        self.chain = chain

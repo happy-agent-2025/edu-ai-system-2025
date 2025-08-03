@@ -10,6 +10,8 @@ from backend.agents.base_agent import BaseAgent
 import json
 import os
 from datetime import datetime
+from langchain.memory import ConversationBufferMemory
+from langchain.schema import HumanMessage, AIMessage
 
 
 class MemoryAgent(BaseAgent):
@@ -25,6 +27,9 @@ class MemoryAgent(BaseAgent):
         # 内存存储
         self.conversations = {}
         self.user_profiles = {}
+        
+        # 为每个用户维护一个LangChain ConversationBufferMemory
+        self.user_memories = {}
         
         # 持久化文件路径
         self.memory_file = "memory_data.json"
@@ -61,6 +66,24 @@ class MemoryAgent(BaseAgent):
                 'agent': self.name,
                 'status': 'retrieved',
                 'history': history
+            }
+        elif action == 'add_to_memory':
+            # 添加到LangChain内存
+            human_message = input_data.get('human_message', '')
+            ai_message = input_data.get('ai_message', '')
+            self._add_to_user_memory(user_id, human_message, ai_message)
+            return {
+                'agent': self.name,
+                'status': 'added',
+                'message': '记忆已添加'
+            }
+        elif action == 'get_memory':
+            # 获取LangChain内存
+            memory = self._get_user_memory(user_id)
+            return {
+                'agent': self.name,
+                'status': 'retrieved',
+                'memory': memory
             }
         else:
             return {
@@ -105,6 +128,38 @@ class MemoryAgent(BaseAgent):
         if user_id in self.conversations:
             # 返回最近的几条记录
             return self.conversations[user_id][-limit:]
+        else:
+            return []
+    
+    def _add_to_user_memory(self, user_id: str, human_message: str, ai_message: str):
+        """
+        添加对话到用户内存
+        
+        Args:
+            user_id (str): 用户ID
+            human_message (str): 用户消息
+            ai_message (str): AI回复
+        """
+        # 如果用户还没有内存对象，创建一个
+        if user_id not in self.user_memories:
+            self.user_memories[user_id] = ConversationBufferMemory()
+        
+        # 添加消息到内存
+        self.user_memories[user_id].chat_memory.add_message(HumanMessage(content=human_message))
+        self.user_memories[user_id].chat_memory.add_message(AIMessage(content=ai_message))
+    
+    def _get_user_memory(self, user_id: str) -> List[Dict[str, str]]:
+        """
+        获取用户内存内容
+        
+        Args:
+            user_id (str): 用户ID
+            
+        Returns:
+            List[Dict[str, str]]: 内存内容
+        """
+        if user_id in self.user_memories:
+            return self.user_memories[user_id].chat_memory.messages
         else:
             return []
     

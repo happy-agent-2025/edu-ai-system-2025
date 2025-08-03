@@ -14,6 +14,7 @@ speech_recognition:
   phrase_time_limit: 5
   energy_threshold: 300
   pause_threshold: 0.8
+  model: "fish-speech-v1.2"  # 支持的模型: fish-speech-v1.2, whisper, google-stt
 
 # 语音合成设置
 speech_synthesis:
@@ -21,6 +22,7 @@ speech_synthesis:
   speaking_rate: 1.0
   pitch: 1.0
   volume_gain_db: 0.0
+  model: "whisper"  # 支持的模型: whisper, fish-speech-v1.2, google-tts
 
 # 音频预处理设置
 preprocessing:
@@ -40,6 +42,7 @@ voice_verification:
   similarity_threshold: 0.8
   enrollment_samples: 3
   verification_attempts: 3
+  model: "speakencoder"  # 支持的模型: speakencoder, google-voice-id
 
 # 音频质量设置
 quality:
@@ -47,3 +50,27 @@ quality:
   max_duration: 30.0  # 最大音频时长(秒)
   min_volume: 0.01    # 最小音量阈值
   max_volume: 1.0     # 最大音量阈值
+
+# 模型路径配置
+model_paths:
+  fish_speech_v1_2: "models/stt/fish_speech_v1.2"
+  whisper: "models/tts/whisper"
+  speakencoder: "models/audio/speakencoder"
+
+# 模型管理配置
+model_management:
+  mlflow:
+    tracking_uri: "http://localhost:5000"
+    experiment_name: "edu-ai-audio"
+  ab_testing:
+    enabled: true
+    variants:
+      - name: "fish-speech-v1.2"
+        model: "fish-speech-v1.2"
+        traffic_percentage: 60
+      - name: "whisper"
+        model: "whisper"
+        traffic_percentage: 40
+  rollback:
+    enabled: true
+    max_versions: 5
