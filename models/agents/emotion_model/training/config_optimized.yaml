@@ -1,0 +1,120 @@
+# AI儿童情感陪伴角色模型训练配置（优化版）
+
+# 模型配置
+model:
+  base_model: "./base_model/models--Qwen--Qwen2.5-0.5B/snapshots/060db6499f32faf8b98477b0a26969ef7d8b9987"  # 基础模型  
+  model_name: "emotion-child-assistant-optimized"  # 模型名称
+  max_length: 2048  # 最大序列长度（Qwen2.5支持更长序列）
+  trust_remote_code: true
+
+# 训练参数
+training:
+  output_dir: "./models/emtion_optimized"  # 模型输出目录
+  num_train_epochs: 5  # 增加训练轮数
+  per_device_train_batch_size: 1  # 训练批次大小
+  per_device_eval_batch_size: 1  # 评估批次大小
+  gradient_accumulation_steps: 16  # 增加梯度累积步数以补偿小批次
+  learning_rate: 1e-4  # 降低学习率以获得更稳定的训练
+  weight_decay: 0.01  # 权重衰减
+  warmup_ratio: 0.1  # 预热比例
+  max_grad_norm: 1.0  # 梯度裁剪
+  
+  # 保存和评估
+  save_steps: 100  # 更频繁地保存模型
+  eval_steps: 100  # 更频繁地评估模型
+  logging_steps: 10  # 日志间隔
+  save_total_limit: 3  # 最多保存模型数
+  
+  # 早停
+  early_stopping_patience: 3
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+
+# LoRA配置 - 增强模型表达能力
+lora:
+  use_lora: true  # 是否使用LoRA
+  r: 32  # 增加LoRA秩以提高表达能力
+  lora_alpha: 64  # LoRA alpha参数
+  lora_dropout: 0.05  # LoRA dropout
+  target_modules:  # Qwen2.5模型的目标模块
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"  # 偏置设置
+
+# 数据配置
+data:
+  train_file: "./data/train.jsonl"  # 训练数据，80%作为训练，10%作为验证，10%作为测试
+  # validation_file: "./data/validation.jsonl"  # 验证数据
+  # test_file: "./data/test.jsonl"  # 测试数据
+  
+  # 数据处理
+  max_source_length: 512  # 增加输入最大长度
+  max_target_length: 512  # 增加输出最大长度
+  ignore_pad_token_for_loss: true
+
+# 生成参数
+generation:
+  max_new_tokens: 256  # 最大生成长度
+  temperature: 0.7  # 温度参数
+  top_p: 0.9  # top-p采样
+  top_k: 50  # top-k采样
+  do_sample: true  # 是否采样
+  repetition_penalty: 1.1  # 重复惩罚
+  length_penalty: 1.0  # 长度惩罚
+  num_beams: 1  # beam search数量
+
+# 角色特定配置
+character:
+  name: "彩虹小精灵"  # 现代感+童趣
+  aliases:  # 别名
+    - "暖暖"
+    - "小精灵"
+    - "开心宝"
+    - "心灵小伙伴"
+  
+  personality:  # 性格特征（强化情感支持）
+    - "温暖治愈系"
+    - "超级耐心"
+    - "情绪观察员"
+    - "积极能量球"
+    - "想象力大师"
+  
+  language_style:  # 语言风格（适配儿童认知）
+    - "短句结构（8-12字/句）"
+    - "多用拟声词（哇/呀/呢/啦）"
+    - "具象化比喻（情绪云朵/开心彩虹）"
+    - "正向强化语言"
+    - "60%口语+40%童话语"
+  
+  background: |
+    诞生于银河系智慧星的AI小精灵，拥有识别情绪的超能力。
+    最喜欢收集小朋友的快乐能量，擅长把难过变成彩虹。
+    使命是帮每个孩子建立心灵防护盾，会108种安慰魔法。
+
+# 系统配置
+system:
+  device: "auto"  # 设备选择: auto, cuda, mps, cpu
+  mixed_precision: "fp16"  # 启用混合精度训练
+  dataloader_num_workers: 2  # 数据加载器工作进程数
+  seed: 42  # 随机种子
+  
+  # 内存优化
+  gradient_checkpointing: true  # 梯度检查点
+  dataloader_pin_memory: true  # 固定内存
+  remove_unused_columns: false  # 移除未使用列
+
+# 评估配置
+evaluation:
+  eval_strategy: "steps"  # 评估策略
+  eval_steps: 100  # 评估步数
+  per_device_eval_batch_size: 1  # 评估批次大小
+  
+  # 评估指标
+  metrics:
+    - "loss"
+    - "perplexity"
